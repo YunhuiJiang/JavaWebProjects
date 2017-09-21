@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.deepsl.hrm.dao.NoticeDao">
+  
+  	<resultMap type="org.deepsl.hrm.domain.Notice" id="noticeUserResultMap">
+		<id property="id" column="id" />
+		<!-- <result property="userId" column="user_id" /> -->
+		<result property="title" column="title" />
+		<result property="createDate" column="create_date" />
+		<result property="content" column="content" />
+	
+		<!-- association ：配置一对一属性 -->
+		<!-- property:notice里面的User属性名 -->
+		<!-- javaType:属性类型 -->
+		<association property="user" javaType="org.deepsl.hrm.domain.User">
+			<!-- id:声明主键，表示user_id是关联查询对象的唯一标识-->
+			<id property="id" column="user_id" />
+			<result property="username" column="username" />
+			<result property="password" column="password" />
+			<result property="loginname" column="loginname" />
+			<result property="status" column="status" />
+			<result property="createDate" column="createDate" />
+			
+		</association>
+	</resultMap>
+  	
+
+   
+   <select id="selectById" parameterType="int"  resultMap="noticeUserResultMap" >
+		 select * from  notice_inf n inner join user_inf u on n.user_id=u.id where n.id=#{id}
+   </select>
+   
+   <delete id="deleteById" parameterType="int" >
+   		delete from notice_inf where id=#{id}
+   </delete>
+   
+   
+    <insert id="save" parameterType="org.deepsl.hrm.domain.Notice" >
+  		<selectKey keyProperty="id" resultType="Integer" order="AFTER">
+			select LAST_INSERT_ID()
+		</selectKey>
+   		insert into notice_inf (title,content,create_date,user_id) values(#{title},#{ content} ,#{createDate},#{user.id})
+   </insert>
+   
+   <update id="update" parameterType="org.deepsl.hrm.domain.Notice">
+   		update notice_inf  
+   		<trim prefix="set" suffixOverrides=",">
+   			<if test="title!=null and title.trim()!=''">
+	         	 title=#{title},
+	         </if>
+	         <if test="content!=null and content.trim()!=''">
+	         	 content=#{content},
+	         </if>
+	         
+	         <if test="user!=null and user.id!=null  ">
+	         	 user_id=#{user.id},
+	         </if>
+	    </trim>
+ 			WHERE id=#{id}
+   </update>
+   
+
+	
+	<!-- <resultMap type="user" id="userList">
+		<id 
+	</resultMap> -->
+	<select id="count" parameterType="hashmap"  resultType="Integer" >
+		 select count(*) from  notice_inf  n inner join user_inf u on n.user_id=u.id
+		 <where>
+		 	<trim prefix=" " suffixOverrides="and">
+   			<if test="notice.title!=null and notice.title.trim()!=''">
+	         	 title like #{notice.title} and
+	         </if>
+	         <if test="notice.content!=null and notice.content.trim()!='' ">
+	         	 content like #{notice.content} and 
+	         </if>
+	    </trim>
+		 </where>	 
+   </select>
+   
+   
+	<select id="selectByPage" parameterType="hashmap"  resultMap="noticeUserResultMap" >
+		 select * from  notice_inf n inner join user_inf u on n.user_id=u.id
+		 <where>
+		 	<trim prefix=" " suffixOverrides="and">
+	   			<if test="notice.title!=null and notice.title.trim()!=''">
+		         	 n.title like #{notice.title} and
+		         </if>
+		         <if test="notice.content!=null and notice.content.trim()!='' ">
+		         	 n.content like #{notice.content} and 
+		         </if>
+		         
+		         <if test="1==1">
+		         	 n.user_id=u.id and
+		         </if>
+	    	</trim>
+	    	
+	    	
+		 </where>
+		 
+   			<if test="pageModel.pageSize!=null ">
+	         	 limit #{pageModel.pageSize} 
+	         </if>
+	         <if test="pageModel.pageIndex!=null ">
+	         	 offset #{pageModel.firstLimitParam}
+	         </if>		 
+   </select>
+
+</mapper>
